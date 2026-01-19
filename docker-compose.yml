@@ -1,0 +1,106 @@
+services:
+  # API Gateway (Nginx для простоты)
+  api-gateway:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+    volumes:
+      - ./api_gateway/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./api_gateway/index.html:/usr/share/nginx/html/index.html:ro
+    depends_on:
+      - user-service
+      - weather-service
+      - wash-advisor-service
+    networks:
+      - car-wash-net
+
+  # User Service
+  user-service:
+    build: ./user_service
+    ports:
+      - "8001:8001"
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://postgres:darya@user-db:5432/userdb
+    depends_on:
+      - user-db
+    volumes:
+      - ./common_logger:/app/common_logger:ro
+    networks:
+      - car-wash-net
+
+  # Weather Service
+  weather-service:
+    build: ./weather_service
+    ports:
+      - "8002:8002"
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://postgres:darya@weather-db:5432/weatherdb
+      - WEATHER_API_KEY=${WEATHER_API_KEY}  # Получите на weatherapi.com
+      - WEATHER_API_URL=https://api.weatherapi.com/v1/forecast.json
+    depends_on:
+      - weather-db
+    volumes:
+      - ./common_logger:/app/common_logger:ro
+    networks:
+      - car-wash-net
+
+  # Wash Advisor Service
+  wash-advisor-service:
+    build: ./wash_advisor_service
+    ports:
+      - "8003:8003"
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://postgres:darya@advisor-db:5432/advisordb
+      - USER_SERVICE_URL=http://user-service:8001
+      - WEATHER_SERVICE_URL=http://weather-service:8002
+    depends_on:
+      - user-service
+      - weather-service
+      - advisor-db
+    volumes:
+      - ./common_logger:/app/common_logger:ro
+    networks:
+      - car-wash-net
+
+  # Базы данных
+  user-db:
+    image: postgres:15-alpine
+    environment:
+      - POSTGRES_DB=userdb
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=darya
+    volumes:
+      - user_data:/var/lib/postgresql/data
+    networks:
+      - car-wash-net
+
+  weather-db:
+    image: postgres:15-alpine
+    environment:
+      - POSTGRES_DB=weatherdb
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=darya
+    volumes:
+      - weather_data:/var/lib/postgresql/data
+    networks:
+      - car-wash-net
+
+  advisor-db:
+    image: postgres:15-alpine
+    environment:
+      - POSTGRES_DB=advisordb
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=darya
+    volumes:
+      - advisor_data:/var/lib/postgresql/data
+    networks:
+      - car-wash-net
+
+volumes:
+  user_data:
+  weather_data:
+  advisor_data:
+
+networks:
+  car-wash-net:
+    driver: bridge

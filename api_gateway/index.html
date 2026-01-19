@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Car Wash Advisor - Dashboard</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .dashboard {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .header {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            margin: 0;
+            font-size: 2.5em;
+        }
+        .subtitle {
+            color: #666;
+            margin-top: 10px;
+            font-size: 1.2em;
+        }
+        .services-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 25px;
+        }
+        .service-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+        }
+        .service-card:hover {
+            transform: translateY(-5px);
+        }
+        .service-title {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .service-icon {
+            font-size: 2em;
+        }
+        .service-name {
+            font-size: 1.5em;
+            color: #333;
+            margin: 0;
+        }
+        .service-desc {
+            color: #666;
+            margin-bottom: 20px;
+            line-height: 1.5;
+        }
+        .btn {
+            display: inline-block;
+            background: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            text-decoration: none;
+            border-radius: 5px;
+            margin: 5px;
+            transition: background 0.3s ease;
+        }
+        .btn:hover {
+            background: #45a049;
+        }
+        .btn-swagger {
+            background: #85ea2d;
+        }
+        .btn-health {
+            background: #2196F3;
+        }
+        .btn-test {
+            background: #ff9800;
+        }
+        .status {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        .status-up {
+            background: #4CAF50;
+        }
+        .status-down {
+            background: #f44336;
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard">
+        <div class="header">
+            <h1>🚗 Car Wash Advisor</h1>
+            <div class="subtitle">Микросервисная система рекомендаций по мойке автомобиля</div>
+        </div>
+        
+        <div class="services-grid">
+            <!-- Weather Service -->
+            <div class="service-card">
+                <div class="service-title">
+                    <div class="service-icon">🌤️</div>
+                    <h2 class="service-name">Weather Service</h2>
+                </div>
+                <p class="service-desc">Прогноз погоды с кэшированием в PostgreSQL</p>
+                
+                <div>
+                    <a href="http://localhost:8002/docs" class="btn btn-swagger" target="_blank">Swagger UI</a>
+                    <a href="http://localhost:8002/health" class="btn btn-health" target="_blank">Health Check</a>
+                    <a href="http://localhost:8002/api/weather?city=Moscow&days=3" class="btn btn-test" target="_blank">Тест API</a>
+                </div>
+                
+                <div style="margin-top: 15px;">
+                    <span class="status status-up"></span>
+                    <span>Статус: <strong>Работает</strong> (порт 8002)</span>
+                </div>
+            </div>
+            
+            <!-- User Service -->
+            <div class="service-card">
+                <div class="service-title">
+                    <div class="service-icon">👤</div>
+                    <h2 class="service-name">User Service</h2>
+                </div>
+                <p class="service-desc">Управление пользователями и автомобилями</p>
+                
+                <div>
+                    <a href="http://localhost:8001/docs" class="btn btn-swagger" target="_blank">Swagger UI</a>
+                    <a href="http://localhost:8001/health" class="btn btn-health" target="_blank">Health Check</a>
+                </div>
+                
+                <div style="margin-top: 15px;">
+                    <span class="status status-up"></span>
+                    <span>Статус: <strong>Работает</strong> (порт 8001)</span>
+                </div>
+            </div>
+            
+            <!-- Wash Advisor Service -->
+            <div class="service-card">
+                <div class="service-title">
+                    <div class="service-icon">💧</div>
+                    <h2 class="service-name">Wash Advisor</h2>
+                </div>
+                <p class="service-desc">Рекомендации по мойке автомобиля</p>
+                
+                <div>
+                    <a href="http://localhost:8003/docs" class="btn btn-swagger" target="_blank">Swagger UI</a>
+                    <a href="http://localhost:8003/health" class="btn btn-health" target="_blank">Health Check</a>
+                </div>
+                
+                <div style="margin-top: 15px;">
+                    <span class="status status-up"></span>
+                    <span>Статус: <strong>Работает</strong> (порт 8003)</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Автоматическая проверка статуса сервисов
+        async function checkServiceStatus() {
+            const services = [
+                { name: 'weather', url: '/health/weather' },
+                { name: 'user', url: '/health/user' },
+                { name: 'advisor', url: '/health/advisor' }
+            ];
+            
+            for (const service of services) {
+                try {
+                    const response = await fetch(service.url);
+                    const element = document.querySelector(`.service-card:nth-child(${services.indexOf(service) + 1}) .status`);
+                    if (response.ok) {
+                        element.className = 'status status-up';
+                        element.nextElementSibling.innerHTML = 'Статус: <strong>Работает</strong>';
+                    } else {
+                        element.className = 'status status-down';
+                        element.nextElementSibling.innerHTML = 'Статус: <strong>Ошибка</strong>';
+                    }
+                } catch (error) {
+                    const element = document.querySelector(`.service-card:nth-child(${services.indexOf(service) + 1}) .status`);
+                    element.className = 'status status-down';
+                    element.nextElementSibling.innerHTML = 'Статус: <strong>Недоступен</strong>';
+                }
+            }
+        }
+        
+        // Проверяем статус при загрузке и каждые 30 секунд
+        document.addEventListener('DOMContentLoaded', checkServiceStatus);
+        setInterval(checkServiceStatus, 30000);
+    </script>
+</body>
+</html>
