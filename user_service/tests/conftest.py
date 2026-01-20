@@ -9,16 +9,10 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy import text
 from datetime import datetime, timedelta
 from jose import jwt
-from app.main import app as fastapi_app
-from app.database import get_db
-from app.models import User
-from app.schemas import UserCreate, UserUpdate
-from app.auth import create_access_token
-
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-os.environ["SECRET_KEY"] = "test-secret-key-for-testing-only"
+os.environ["SECRET_KEY"] = "test-secret-key"
 os.environ["DATABASE_URL"] = "sqlite+aiosqlite:///:memory:"
 
 class MockLogger:
@@ -61,6 +55,11 @@ def patched_create_async_engine(*args, **kwargs):
     return original_create_async_engine(*args, **kwargs)
 
 sqlalchemy.ext.asyncio.create_async_engine = patched_create_async_engine
+
+from app.database import get_db
+from app.models import User
+from app.schemas import UserCreate, UserUpdate
+from app.auth import create_access_token
 
 
 @pytest.fixture(scope="session")
@@ -142,6 +141,7 @@ async def override_get_db(clean_db):
 @pytest.fixture
 def app(override_get_db):
     """Тестовое приложение FastAPI с переопределенной зависимостью БД"""
+    from app.main import app as fastapi_app
     fastapi_app.dependency_overrides[get_db] = override_get_db
     
     yield fastapi_app

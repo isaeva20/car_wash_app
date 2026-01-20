@@ -1,8 +1,9 @@
-from sqlalchemy import Column, String, Date, Float, Integer, ForeignKey, JSON, Boolean
+from sqlalchemy import Column, String, Date, DateTime, Float, Integer, ForeignKey, JSON, Boolean
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
 import uuid
 from app.database import Base
+from datetime import datetime
 
 def generate_uuid():
     return str(uuid.uuid4())
@@ -42,8 +43,8 @@ class WeatherForecast(Base):
     raw_data = Column(JSON, nullable=True)
     forecast_source = Column(String, default="weatherapi")
     is_cached = Column(Boolean, default=True)
-    created_at = Column(Date, server_default=func.now())
-    updated_at = Column(Date, onupdate=func.now())
+    created_at = Column(DateTime, default=datetime.now())
+    updated_at = Column(DateTime, onupdate=datetime.now())
     
     location = relationship("Location", back_populates="forecasts")
     

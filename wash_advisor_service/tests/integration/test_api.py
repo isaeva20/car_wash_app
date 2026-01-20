@@ -4,7 +4,6 @@ from datetime import date, timedelta
 from unittest.mock import AsyncMock, MagicMock, patch
 import sys
 import os
-from app.crud import CRUD
 from datetime import date
 from app.database import get_db
 
@@ -163,61 +162,55 @@ class TestWashRecommendations:
 
     def test_get_wash_recommendation_with_cached_data(self, client, mock_api_client, db):
         """Получение рекомендации с кэшированными данными"""
-        weather_data = {
-            "temperature": 20.0,
-            "precipitation_probability": 0.1,
-            "precipitation_amount": 0.5,
-            "wind_speed": 10.0,
-            "humidity": 60,
-            "weather_description": "Sunny",
-            "raw_data": {"test": "data"}
-        }
-
-        analysis_results = {
-            "is_recommended": True,
-            "score": 85.0,
-            "reason": "Отличные условия",
-            "is_rain_expected": False,
-            "is_temperature_optimal": True,
-            "is_wind_acceptable": True
-        }
-        
-        async def create_test_data():
-            recommendation = await CRUD.create_recommendation(
-                db,
-                "cached_user",
-                "Moscow",
-                date.today(),
-                weather_data,
-                analysis_results,
-                {"days_since_last_wash": 10, "is_interval_optimal": True}
-            )
-            await db.commit()
-            return recommendation
-
         user_info = {
             "user_id": "cached_user",
             "city": "Moscow",
             "country": "Russia",
             "last_wash_date": (date.today() - timedelta(days=10)).isoformat(),
             "preferred_wash_interval": 7
-        }
-
+         }
         mock_api_client.get_user_info.return_value = user_info
 
-        response = client.post("/api/recommendations", json={
-            "user_id": "cached_user",
-            "days": 7,
-            "force_refresh": False
-        })
-        assert response.status_code == 200
-        data = response.json()
-        assert data["cached"] == True
-        assert data["user_id"] == "cached_user"
-        assert data["location"] == "Moscow"
-        assert "best_day" in data
-        assert "all_days" in data
-        mock_api_client.get_weather_forecast.assert_not_called()
+        from app.models import WashRecommendation
+
+        mock_recommendation = WashRecommendation(
+            user_id="cached_user",
+            location="Moscow",
+            recommendation_date=date.today(),
+            temperature=20.0,
+            precipitation_probability=0.1,
+            precipitation_amount=0.5,
+            wind_speed=10.0,
+            humidity=60,
+            weather_description="Sunny",
+            score=85.0,
+            is_recommended=True,
+            reason="Отличные условия",
+            is_rain_expected=False,
+            is_temperature_optimal=True,
+            is_wind_acceptable=True
+        )
+        with patch("app.main.CRUD.get_cached_recommendation") as mock_get_cached:
+            mock_get_cached.return_value = mock_recommendation
+            response = client.post("/api/recommendations", json={
+                "user_id": "cached_user",
+                "days": 7,
+                "force_refresh": False
+            })
+            assert response.status_code == 200
+            data = response.json()
+            assert data["cached"] == True
+            assert data["user_id"] == "cached_user"
+            assert data["location"] == "Moscow"
+            assert "best_day" in data
+            assert "all_days" in data
+            mock_api_client.get_weather_forecast.assert_not_called()
+            mock_get_cached.assert_called_once_with(
+                db,
+                "cached_user",
+                "Moscow",
+                7
+            )
 
     def test_get_wash_recommendation_force_refresh(self, client, mock_api_client, db):
         """Принудительное обновление рекомендации"""

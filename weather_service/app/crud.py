@@ -1,6 +1,6 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, delete, and_
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 import logging
 from typing import Optional, List, Dict, Any
 
@@ -88,13 +88,12 @@ class CRUD:
         """Получить кэшированный прогноз погоды"""
         try:
             cache_limit = datetime.now() - timedelta(hours=settings.CACHE_TTL_HOURS)
-            cache_limit_date = cache_limit.date()
             query = (
                 select(WeatherForecast)
                 .where(
                     and_(
                         WeatherForecast.location_id == location_id,
-                        WeatherForecast.created_at >= cache_limit_date,
+                        WeatherForecast.created_at >= cache_limit,
                         WeatherForecast.is_cached == True
                     )
                 )

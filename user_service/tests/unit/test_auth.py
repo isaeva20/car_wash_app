@@ -19,7 +19,7 @@ class TestAuth:
         assert len(token) > 0
         payload = jwt.decode(
             token, 
-            "test-secret-key-for-testing-only", 
+            "test-secret-key", 
             algorithms=["HS256"]
         )
         assert payload["sub"] == "testuser"
@@ -33,7 +33,7 @@ class TestAuth:
         token = create_access_token(test_data, expires_delta=custom_expiry)
         payload = jwt.decode(
             token,
-            "test-secret-key-for-testing-only",
+            "test-secret-key",
             algorithms=["HS256"]
         )
         exp_time = datetime.fromtimestamp(payload["exp"])
@@ -44,9 +44,12 @@ class TestAuth:
     def test_create_access_token_logging(self, mock_logger):
         """Проверка логирования при создании токена"""
         test_data = {"sub": "loggeduser"}
+        token = create_access_token(test_data)
         mock_logger.info.assert_called_once_with(
             f"Token created for user: {test_data['sub']}"
         )
+        assert isinstance(token, str)
+        assert len(token) > 0
     
     @pytest.mark.asyncio
     @patch("app.auth.jwt.decode")
@@ -68,7 +71,7 @@ class TestAuth:
         }
         mock_jwt_decode.assert_called_once_with(
             "valid.token.here",
-            "test-secret-key-for-testing-only",
+            "test-secret-key",
             algorithms=["HS256"]
         )
     

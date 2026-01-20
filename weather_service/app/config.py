@@ -12,7 +12,7 @@ class Settings:
         "postgresql+asyncpg://postgres:darya@weather-db:5432/weatherdb"
     )
     PORT = int(os.getenv("PORT", 8002))
-    CACHE_TTL_HOURS = int(os.getenv("CACHE_TTL_HOURS", 1))
+    CACHE_TTL_HOURS = int(os.getenv("CACHE_TTL_HOURS", 24))
     
     @classmethod
     def validate(cls):

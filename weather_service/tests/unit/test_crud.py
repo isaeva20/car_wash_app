@@ -1,6 +1,6 @@
 import pytest
 from unittest.mock import patch
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 from sqlalchemy import select
 
 from app.crud import CRUD
@@ -172,7 +172,7 @@ class TestCRUDOperations:
             date=date.today(),
             temperature_avg=10.0,
             is_cached=True,
-            created_at=date.today() - timedelta(days=2)
+            created_at=datetime.now() - timedelta(days=2)
         )
         db.add(old_forecast)
         await db.commit()

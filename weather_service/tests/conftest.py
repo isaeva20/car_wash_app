@@ -60,6 +60,10 @@ async def engine():
         echo=False,
         connect_args={"check_same_thread": False}
     )
+    
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.drop_all)
+
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
     

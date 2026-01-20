@@ -11,7 +11,6 @@ class HealthCheck(BaseModel):
     timestamp: Optional[str] = None
     error: Optional[str] = None
 
-# ============== Схемы User ==============
 class UserBase(BaseModel):
     username: str
     email: EmailStr
